@@ -1,14 +1,20 @@
+import { Route, Routes } from "react-router-dom"
+
+import Navbar from './components/pageComponents/Navbar.jsx'
+import Home from './pages/home/HomePage.jsx'
+import LogInPage from './pages/auth/login/LogInPage.jsx'
+import SignUpPage from "./pages/auth/signup/SignUpPage.jsx"
+
 function App() {
   return (
-    <>
-      <button className="btn">Button</button>
-      <button className="btn btn-neutral">Neutral</button>
-      <button className="btn btn-primary">Primary</button>
-      <button className="btn btn-secondary">Secondary</button>
-      <button className="btn btn-accent">Accent</button>
-      <button className="btn btn-ghost">Ghost</button>
-      <button className="btn btn-link">Link</button>
-    </>
+    <div className='flex flex-col'>
+      <Navbar />
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route path='/login' element={<LogInPage />} />
+        <Route path='/signup' element={<SignUpPage />} />
+      </Routes>
+    </div>
   )
 }
 
