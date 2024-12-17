@@ -1,0 +1,162 @@
+import React, { useState } from "react";
+import { createPost, uploadToCloudinary } from "../api/api"; // Import functions
+
+const NewPost = () => {
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    difficulty: "",
+    file: null,
+  });
+
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      let fileUrl = null;
+
+      if (formData.file) {
+        setUploading(true);
+        fileUrl = await uploadToCloudinary(formData.file); // Upload file
+        setUploading(false);
+      }
+
+      const postData = {
+        title: formData.title,
+        description: formData.description,
+        difficulty: formData.difficulty,
+        fileUrl: fileUrl, // Cloudinary file URL
+      };
+
+      // Call API to create the post
+      const response = await createPost(postData);
+      console.log("Post created successfully:", response);
+
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        difficulty: "",
+        file: null,
+      });
+    } catch (error) {
+      console.error("Error creating post:", error.message);
+    } finally {
+      setSubmitting(false);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-base-200 flex items-center justify-center">
+      <div className="card w-full max-w-lg shadow-lg bg-base-100">
+        <div className="card-body">
+          <h2 className="card-title text-3xl justify-center">Create New Post</h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Title */}
+            <div className="form-control">
+              <label className="label" htmlFor="title">
+                <span className="label-text">Post Title</span>
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Enter title"
+                className="input input-bordered w-full"
+                required
+              />
+            </div>
+
+            {/* Description */}
+            <div className="form-control">
+              <label className="label" htmlFor="description">
+                <span className="label-text">Description</span>
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Enter description"
+                className="textarea textarea-bordered w-full"
+                required
+              ></textarea>
+            </div>
+
+            {/* Difficulty */}
+            <div className="form-control">
+              <label className="label" htmlFor="difficulty">
+                <span className="label-text">Difficulty</span>
+              </label>
+              <select
+                id="difficulty"
+                name="difficulty"
+                value={formData.difficulty}
+                onChange={handleChange}
+                className="select select-bordered w-full"
+                required
+              >
+                <option value="" disabled>
+                  Select difficulty
+                </option>
+                <option value="1">1 - Very Easy</option>
+                <option value="2">2 - Easy</option>
+                <option value="3">3 - Medium</option>
+                <option value="4">4 - Hard</option>
+                <option value="5">5 - Very Hard</option>
+              </select>
+            </div>
+
+            {/* File Upload */}
+            <div className="form-control">
+              <label className="label" htmlFor="file">
+                <span className="label-text">Upload File</span>
+              </label>
+              <input
+                type="file"
+                id="file"
+                name="file"
+                onChange={handleChange}
+                className="file-input file-input-bordered w-full"
+              />
+            </div>
+
+            {/* Loading States */}
+            {uploading && <div className="text-blue-500">Uploading file...</div>}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className={`btn btn-primary w-full ${
+                submitting ? "loading" : ""
+              }`}
+              disabled={uploading || submitting}
+            >
+              {submitting ? "Submitting..." : "Create Post"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NewPost;

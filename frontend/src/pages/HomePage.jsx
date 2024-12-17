@@ -45,7 +45,7 @@ const HomePage = () => {
           posts.map((post) => (
             <div key={post._id} className="post-card mb-4 p-4 border rounded-lg shadow-md bg-white">
               <h3 className="font-bold text-xl">{post.userName}</h3>
-              <p className="text-gray-700">{post.content}</p>
+              <p className="text-gray-700">{post.text}</p>
               {/* Add more post details here (e.g., date, likes, etc.) */}
             </div>
           ))

@@ -5,13 +5,13 @@ import { v2 as cloudinary } from "cloudinary";
 
 export const createPost = async (req, res) => {
   try {
-    const { text } = req.body;
+    const { title, description, difficulty } = req.body;
     let { img } = req.body;
     const userId = req.user._id.toString();
 
     const user = await User.findById(userId);
     if(!user) return res.status(400).json({ message: "User not found" });
-    if(!text && !img) return res.status(400).json({ message: "Posts cannot be empty" }); 
+    if(!title && !img) return res.status(400).json({ message: "Posts cannot be empty" }); 
 
     if(img) {
       const uploadedResponse = await cloudinary.uploader.upload(img);
@@ -20,8 +20,10 @@ export const createPost = async (req, res) => {
 
     const newPost = new Post({
       user: userId,
-      text,
-      img
+      title,
+      description,
+      difficulty,
+      // img: fileUrl, //Cloudinary file URL
     });
 
     await newPost.save();

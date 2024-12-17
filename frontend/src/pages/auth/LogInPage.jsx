@@ -26,6 +26,7 @@ const LogInPage = () => {
       setError(err.message || "Login failed");
     } finally {
       setIsLoading(false);
+      window.location.reload();
     }
   };
 

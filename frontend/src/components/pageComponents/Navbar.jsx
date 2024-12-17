@@ -43,9 +43,7 @@ const Navbar = () => {
           Homee
         </Link>
       </div>
-      <div className="navbar-end">
         <ProfileNav />
-      </div>
     </div>
   );
 };
