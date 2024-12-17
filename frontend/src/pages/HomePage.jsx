@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllPosts, getFollowingPosts } from '../../api/api.js';
+import { getAllPosts, getFollowingPosts } from '../api/api.js';
 
 const HomePage = () => {
   const [activeTab, setActiveTab] = useState('all');

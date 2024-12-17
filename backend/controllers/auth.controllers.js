@@ -1,71 +1,76 @@
 import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
-import User from "../models/user.model.js"
-import bcrypt from "bcryptjs"
+import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
 
+// Signup controller
 export const signup = async (req, res) => {
-    try { 
-       const {fullName, username, email, password} = req.body;
+  try {
+    const { fullName, username, email, password } = req.body;
 
-       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-       if (!emailRegex.test(email)) {
-        return res.status(400).json({error: "Please enter a valid email address"});
-       }
-       
-       const existingUser = await User.findOne({ username });
-       if(existingUser){
-        return res.status(400).json({ error: "This username is already taken"});
-       }
-
-       const existingEmail = await User.findOne({ email });
-       if(existingEmail){
-        return res.status(400).json({ error: "This email is already in use"});
-       }
-
-       if(password.length < 8){
-        return res.status(400).json({error: "Password must be at least 8 characters long"})
-       }
-
-       const salt = await bcrypt.genSalt(10);
-       const hashedPassword = await bcrypt.hash(password, salt);
-
-       const newUser = new User({
-        fullName,
-        username,
-        email,
-        password: hashedPassword
-       })
-
-       if(newUser){
-        generateTokenAndSetCookie(newUser._id, res)
-        await newUser.save();
-        res.status(201).json({
-          _id: newUser._id,
-          fullName: newUser.fullName,
-          username: newUser.username,
-          email: newUser.email, 
-          followers: newUser.followers,
-          following: newUser.following,
-          profileImg: newUser.profileImg,
-          coverImg: newUser.coverImg,
-        })
-       }else{
-        res.status(400).json({error: "Failed to create user"})
-       }
-    }catch (error){
-      console.log("Error at signup", error.message);
-      res.status(500).json({error: "Internal server error"});
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Please enter a valid email address" });
     }
-  };
 
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: "This username is already taken" });
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(400).json({ error: "This email is already in use" });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      fullName,
+      username,
+      email,
+      password: hashedPassword
+    });
+
+    if (newUser) {
+      await newUser.save();
+      generateTokenAndSetCookie(newUser._id, res);
+      res.status(201).json({
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        username: newUser.username,
+        email: newUser.email,
+        followers: newUser.followers,
+        following: newUser.following,
+        profileImg: newUser.profileImg,
+        coverImg: newUser.coverImg,
+      });
+    } else {
+      res.status(400).json({ error: "Failed to create user" });
+    }
+  } catch (error) {
+    console.log("Error at signup", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Login controller
 export const login = async (req, res) => {
   try {
+    const { username, password } = req.body;
 
-    const {username,password} = req.body;
-    const user = await User.findOne({username});
-    const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid username or password" });
+    }
 
-    if(!isPasswordCorrect){
-      return res.status(400).json({error: "Invalid username or password"});
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid username or password" });
     }
 
     generateTokenAndSetCookie(user._id, res);
@@ -74,7 +79,7 @@ export const login = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       username: user.username,
-      email: user.email, 
+      email: user.email,
       followers: user.followers,
       following: user.following,
       profileImg: user.profileImg,
@@ -82,27 +87,31 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.log("Error at login controller", error.message);
-    res.status(500).json({error: "Internal server error"});
-  }
-
-  };
-
-export const logout = async (req, res) => {
-  try {
-    res.cookie("jwt", "",{maxAge: 0});
-    res.clearCookie("token").json({message: "Logged out successfully"});
-  } catch (error) {
-    console.log("Error at logout controller", error.message);
-    res.status(500).json({error: "Internal server error"});
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
+// Logout controller
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("jwt");  // Ensure the correct cookie is cleared
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log("Error at logout controller", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Get user details (protected route)
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
     res.status(200).json(user);
   } catch (error) {
     console.log("Error at getMe controller", error.message);
-    res.status(500).json({error: "Internal server error"});
-  };
+    res.status(500).json({ error: "Internal server error" });
+  }
 };

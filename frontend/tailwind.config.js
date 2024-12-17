@@ -21,6 +21,7 @@ export default {
             "error": "#dc2626",
           },
         },
+        "dark"
       ],
     },
   plugins: [daisyui],
