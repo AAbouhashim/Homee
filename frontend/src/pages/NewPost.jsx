@@ -54,11 +54,8 @@ const NewPost = () => {
       image: formData.image,
     };
   
-    console.log("Submitting post data:", postData);
-  
     try {
       const response = await createPost(postData);
-      console.log("API Response:", response);
   
       // Reset form
       setFormData({

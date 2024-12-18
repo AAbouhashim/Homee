@@ -10,7 +10,6 @@ const Notifications = () => {
     try {
       setLoading(true);
       const data = await getNotifications();
-      console.log("Notifications:", data);
       setNotifications(data);
     } catch (error) {
       console.error("Error fetching notifications:", error.message);
