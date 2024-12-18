@@ -2,14 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { signup } from "../../api/api.js";
 import Brick from "../../components/assets/brick.jsx";
-
-import { MdOutlineMail } from "react-icons/md";
+import { MdOutlineMail, MdPassword, MdDriveFileRenameOutline } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
-import { MdPassword } from "react-icons/md";
-import { MdDriveFileRenameOutline } from "react-icons/md";
 
 const SignUpPage = () => {
-  const navigate = useNavigate(); // To redirect after successful sign-up
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -19,109 +16,120 @@ const SignUpPage = () => {
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      // Make an API call to the backend to create a new user
-      const response = await signup(formData.email, formData.password, formData.fullName, formData.username);
+      const response = await signup(
+        formData.email,
+        formData.password,
+        formData.fullName,
+        formData.username
+      );
       if (response) {
-        // Success: Redirect to login page (or wherever you'd like)
         navigate("/");
       }
     } catch (error) {
-      // Error handling
       setIsError(true);
       setErrorMessage(error.message || "Something went wrong. Please try again.");
     }
   };
 
-  // Handle input changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="max-w-screen-xl mx-auto flex h-screen px-10">
-      <div className="flex-1 hidden lg:flex items-center justify-center">
-        <Brick className="lg:w-2/3 fill-white" />
-      </div>
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <form className="lg:w-2/3 mx-auto md:mx-20 flex gap-4 flex-col" onSubmit={handleSubmit}>
-          <h1 className="text-4xl font-extrabold text-white">Join today.</h1>
-          
-          {/* Email Field */}
-          <label className="input input-bordered rounded flex items-center gap-2">
-            <MdOutlineMail />
-            <input
-              type="email"
-              className="grow"
-              placeholder="Email"
-              name="email"
-              onChange={handleInputChange}
-              value={formData.email}
-              required
-            />
-          </label>
+    <div className="hero bg-base-200 min-h-screen">
+      <div className="hero-content flex-col lg:flex-row-reverse">
+        {/* Logo Section */}
+        <div className="hidden lg:flex items-center justify-center lg:w-1/2">
+          <Brick className="lg:w-2/3 fill-primary" />
+        </div>
 
-          {/* Username & Full Name */}
-          <div className="flex gap-4 flex-wrap">
-            <label className="input input-bordered rounded flex items-center gap-2 flex-1">
-              <FaUser />
+        {/* Form Section */}
+        <div className="card bg-base-100 w-full max-w-sm shadow-2xl">
+          <form className="card-body" onSubmit={handleSubmit}>
+            <h1 className="text-4xl font-bold text-primary text-center mb-6">
+              Join Today
+            </h1>
+
+            {/* Email Field */}
+            <label className="input input-bordered flex items-center gap-2">
+              <MdOutlineMail className="text-lg" />
               <input
-                type="text"
-                className="grow"
-                placeholder="Username"
-                name="username"
+                type="email"
+                placeholder="Email"
+                name="email"
+                value={formData.email}
                 onChange={handleInputChange}
-                value={formData.username}
                 required
+                className="grow"
               />
             </label>
-            <label className="input input-bordered rounded flex items-center gap-2 flex-1">
-              <MdDriveFileRenameOutline />
+
+            {/* Username & Full Name */}
+            <div className="flex gap-4 flex-wrap">
+              <label className="input input-bordered flex items-center gap-2 flex-1">
+                <FaUser className="text-lg" />
+                <input
+                  type="text"
+                  placeholder="Username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  required
+                  className="grow"
+                />
+              </label>
+              <label className="input input-bordered flex items-center gap-2 flex-1">
+                <MdDriveFileRenameOutline className="text-lg" />
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
+                  className="grow"
+                />
+              </label>
+            </div>
+
+            {/* Password Field */}
+            <label className="input input-bordered flex items-center gap-2">
+              <MdPassword className="text-lg" />
               <input
-                type="text"
-                className="grow"
-                placeholder="Full Name"
-                name="fullName"
+                type="password"
+                placeholder="Password"
+                name="password"
+                value={formData.password}
                 onChange={handleInputChange}
-                value={formData.fullName}
                 required
+                className="grow"
               />
             </label>
-          </div>
 
-          {/* Password Field */}
-          <label className="input input-bordered rounded flex items-center gap-2">
-            <MdPassword />
-            <input
-              type="password"
-              className="grow"
-              placeholder="Password"
-              name="password"
-              onChange={handleInputChange}
-              value={formData.password}
-              required
-            />
-          </label>
+            {/* Submit Button */}
+            <div className="form-control mt-6">
+              <button type="submit" className="btn btn-primary">
+                Sign Up
+              </button>
+            </div>
 
-          {/* Submit Button */}
-          <button className="btn rounded-full btn-primary text-white">Sign up</button>
-          
-          {/* Error Message */}
-          {isError && <p className="text-red-500">{errorMessage}</p>}
-        </form>
+            {/* Error Message */}
+            {isError && (
+              <p className="text-red-500 text-sm text-center mt-2">{errorMessage}</p>
+            )}
+            {/* Login Link */}
+            <div className="form-control mt-4">
+              <p className="text-gray-600 text-center">Already have an account?</p>
+              <Link to="/login" className="btn btn-secondary btn-primary mt-2">
+                Sign In
+              </Link>
+            </div>
+          </form>
 
-        {/* Login Link */}
-        <div className="flex flex-col lg:w-2/3 gap-2 mt-4">
-          <p className="text-white text-lg">Already have an account?</p>
-          <Link to="/login">
-            <button className="btn rounded-full btn-primary text-white btn-outline w-full">
-              Sign in
-            </button>
-          </Link>
+
         </div>
       </div>
     </div>
