@@ -16,7 +16,6 @@ const ProfileNav = () => {
     const checkLogin = async () => {
       try {
         const user = await getMe();
-        console.log("User logged in:", user);
         setIsLoggedIn(true);
         setUserData(user);
       } catch (error) {

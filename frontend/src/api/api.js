@@ -37,7 +37,7 @@ const apiCall = async (method, url, data = null) => {
     } else if (method === 'DELETE') {
       response = await api.delete(url);
     }
-    console.log("API Response:", response.data);
+    // console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("API Error Details:");
