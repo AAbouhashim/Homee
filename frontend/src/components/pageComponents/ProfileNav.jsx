@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { getMe, logout, getNotifications } from "../../api/api.js";
 
@@ -6,8 +6,11 @@ const ProfileNav = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null); // Store user data
   const [notificationCount, setNotificationCount] = useState(0); // Store notification count
+  const [highlightAlert, setHighlightAlert] = useState(false); // Highlight the alert section
+  const [dropdownOpen, setDropdownOpen] = useState(false); // Dropdown state
   const navigate = useNavigate();
   const location = useLocation();
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -24,7 +27,21 @@ const ProfileNav = () => {
     const fetchNotifications = async () => {
       try {
         const notifications = await getNotifications();
-        setNotificationCount(notifications.length);
+        const newCount = notifications.length;
+
+        // Trigger alert only if new count is greater than zero and changes
+        if (newCount > 0 && newCount !== notificationCount) {
+          setHighlightAlert(true);
+          setDropdownOpen(true);
+
+          // Auto-close the dropdown after 1 second
+          setTimeout(() => {
+            setDropdownOpen(false);
+            setHighlightAlert(false);
+          }, 1000);
+        }
+
+        setNotificationCount(newCount);
       } catch (error) {
         console.error("Error fetching notifications:", error.message);
         setNotificationCount(0);
@@ -34,17 +51,17 @@ const ProfileNav = () => {
     // Initial login check
     checkLogin();
 
-    // Polling for notifications every 30 seconds
+    // Polling for notifications every 10 seconds
     let intervalId;
     if (isLoggedIn) {
       fetchNotifications(); // Initial fetch
-      intervalId = setInterval(fetchNotifications, 30000); // Fetch every 30 seconds
+      intervalId = setInterval(fetchNotifications, 10000); // Fetch every 10 seconds
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId); // Cleanup interval on unmount
     };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, notificationCount]);
 
   const handleLogout = async () => {
     try {
@@ -72,8 +89,16 @@ const ProfileNav = () => {
             Log In
           </Link>
         ) : (
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+          <div
+            className={`dropdown dropdown-end ${dropdownOpen ? "dropdown-open" : ""}`}
+            ref={dropdownRef}
+          >
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle avatar"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+            >
               <div className="w-10 rounded-full flex items-center justify-center bg-gray-200">
                 {userData?.profileImg ? (
                   <img
@@ -97,7 +122,12 @@ const ProfileNav = () => {
                 <Link to="/my-account">{userData?.fullName}</Link>
               </li>
               <li>
-                <Link to="/notifications">
+                <Link
+                  to="/notifications"
+                  className={`flex justify-between ${
+                    highlightAlert ? "bg-red-100 text-red-600" : ""
+                  }`}
+                >
                   Alerts
                   <span className="badge">
                     {notificationCount > 99 ? "99+" : notificationCount}
