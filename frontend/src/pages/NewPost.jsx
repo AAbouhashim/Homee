@@ -64,13 +64,16 @@ const NewPost = () => {
         difficulty: "",
         image: "",
       });
+
+      // Redirect to home page
+      window.location.href = "/";
     } catch (err) {
       console.error("Error:", err);
       setError("Failed to submit the form.");
     } finally {
       setSubmitting(false);
     }
-  };  
+  };
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center">
