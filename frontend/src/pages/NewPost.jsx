@@ -1,70 +1,87 @@
 import React, { useState } from "react";
-import { createPost, uploadToCloudinary } from "../api/api"; // Import functions
+import { createPost } from "../api/api"; // Import API functions
 
 const NewPost = () => {
-
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     difficulty: "",
-    file: null,
+    image: "", // Store the Base64 string
   });
 
-  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [uploadedFileName, setUploadedFileName] = useState("");
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
+
+    if (files) {
+      const file = files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        // Limit file size to 5MB
+        setError("File size must be less than 5MB.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prevData) => ({
+          ...prevData,
+          image: reader.result, // Store Base64 string
+        }));
+      };
+      reader.readAsDataURL(file); // Convert file to Base64
+
+      setUploadedFileName(file.name); // Display the file name
+      setError(""); // Clear any existing error
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-
+  
+    const postData = {
+      title: formData.title,
+      description: formData.description,
+      difficulty: formData.difficulty,
+      image: formData.image,
+    };
+  
+    console.log("Submitting post data:", postData);
+  
     try {
-      let fileUrl = null;
-
-      if (formData.file) {
-        setUploading(true);
-        fileUrl = await uploadToCloudinary(formData.file); // Upload file
-        setUploading(false);
-      }
-
-      const postData = {
-        title: formData.title,
-        description: formData.description,
-        difficulty: formData.difficulty,
-        fileUrl: fileUrl, // Cloudinary file URL
-      };
-
-      // Call API to create the post
       const response = await createPost(postData);
-      console.log("Post created successfully:", response);
-
+      console.log("API Response:", response);
+  
       // Reset form
       setFormData({
         title: "",
         description: "",
         difficulty: "",
-        file: null,
+        image: "",
       });
-    } catch (error) {
-      console.error("Error creating post:", error.message);
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Failed to submit the form.");
     } finally {
       setSubmitting(false);
-      setUploading(false);
     }
-  };
+  };  
 
   return (
     <div className="min-h-screen bg-base-200 flex items-center justify-center">
       <div className="card w-full max-w-lg shadow-lg bg-base-100">
         <div className="card-body">
           <h2 className="card-title text-3xl justify-center">Create New Post</h2>
+
+          {error && <p className="text-red-500">{error}</p>} {/* Error Message */}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title */}
@@ -137,10 +154,10 @@ const NewPost = () => {
                 onChange={handleChange}
                 className="file-input file-input-bordered w-full"
               />
+              {uploadedFileName && (
+                <p className="text-gray-500 mt-2">Selected file: {uploadedFileName}</p>
+              )}
             </div>
-
-            {/* Loading States */}
-            {uploading && <div className="text-blue-500">Uploading file...</div>}
 
             {/* Submit Button */}
             <button
@@ -148,7 +165,7 @@ const NewPost = () => {
               className={`btn btn-primary w-full ${
                 submitting ? "loading" : ""
               }`}
-              disabled={uploading || submitting}
+              disabled={submitting}
             >
               {submitting ? "Submitting..." : "Create Post"}
             </button>

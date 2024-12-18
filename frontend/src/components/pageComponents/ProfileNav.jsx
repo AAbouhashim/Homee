@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { getMe, logout } from "../../api/api.js";
-import { RxAvatar } from "react-icons/rx";
+import { getMe, logout, getNotifications } from "../../api/api.js";
 
 const ProfileNav = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null); // Store user data
+  const [notificationCount, setNotificationCount] = useState(0); // Store notification count
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,14 +20,38 @@ const ProfileNav = () => {
         console.error("User not logged in");
       }
     };
+
+    const fetchNotifications = async () => {
+      try {
+        const notifications = await getNotifications();
+        setNotificationCount(notifications.length);
+      } catch (error) {
+        console.error("Error fetching notifications:", error.message);
+        setNotificationCount(0);
+      }
+    };
+
+    // Initial login check
     checkLogin();
-  }, []);
+
+    // Polling for notifications every 30 seconds
+    let intervalId;
+    if (isLoggedIn) {
+      fetchNotifications(); // Initial fetch
+      intervalId = setInterval(fetchNotifications, 30000); // Fetch every 30 seconds
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId); // Cleanup interval on unmount
+    };
+  }, [isLoggedIn]);
 
   const handleLogout = async () => {
     try {
       await logout();
       setIsLoggedIn(false);
       setUserData(null); // Clear user data
+      setNotificationCount(0); // Clear notification count
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error.message);
@@ -58,7 +82,10 @@ const ProfileNav = () => {
                     className="rounded-full"
                   />
                 ) : (
-                  <RxAvatar size={40} className="text-gray-500" />
+                  <img
+                    alt="User Avatar"
+                    src={`https://api.dicebear.com/6.x/initials/svg?seed=${userData.username}`}
+                  />
                 )}
               </div>
             </div>
@@ -72,7 +99,9 @@ const ProfileNav = () => {
               <li>
                 <Link to="/notifications">
                   Alerts
-                  <span className="badge">99+</span>
+                  <span className="badge">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </span>
                 </Link>
               </li>
               <li>

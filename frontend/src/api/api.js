@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { set } from 'mongoose';
 
 const api = axios.create({
   baseURL: 'http://localhost:5001/api',
@@ -52,32 +53,6 @@ const apiCall = async (method, url, data = null) => {
   }
 };
 
-// Cloudinary Upload Function
-export const uploadToCloudinary = async (file) => {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("HomeeImages", "HomeeImages"); // Cloudinary upload preset
-
-    const response = await fetch(
-      "https://api.cloudinary.com/v1_1/da7w5rds2/image/upload",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const data = await response.json();
-    if (!response.ok) throw new Error("Failed to upload file");
-
-    return data.secure_url; // Return the Cloudinary file URL
-  } catch (error) {
-    console.error("Error uploading file to Cloudinary:", error.message);
-    throw error;
-  }
-};
-
-
 // Auth API functions
 export const getMe = async () => apiCall('POST', '/auth/me', {setAuthToken});
 export const signup = async (email, password, fullName, username) => apiCall('POST', '/auth/signup', { email, password, fullName, username });
@@ -93,45 +68,22 @@ export const logout = async () => {
 };
 
 // User API functions
-export const getUser = async (userName) => apiCall('GET', `/users/${userName}`);
+export const getUser = async (userId) => apiCall('GET', `/users/${userId}`);
 export const getSuggestedUsers = async () => apiCall('GET', '/users/suggested');
-export const followUnfollowUser = async (userId) => apiCall('POST', `/users/follow/${userId}`);
+export const followUnfollowUser = async (userId) => apiCall('POST', `/users/follow/${userId}`, {setAuthToken});
 export const updateUser = async (userData) => apiCall('POST', '/users/update', userData);
 
 // Notification API functions
-export const getNotifications = async () => apiCall('GET', '/notifications');
-export const deleteNotifications = async () => apiCall('DELETE', '/notifications');
+export const getNotifications = async () => apiCall('GET', '/notifications', {setAuthToken});
+export const deleteNotifications = async () => apiCall('DELETE', '/notifications', {setAuthToken});
 export const deleteNotification = async (notificationId) => apiCall('DELETE', `/notifications/${notificationId}`);
 
 // Post API functions
 export const createPost = async (postData) => apiCall('POST', '/posts/create', postData);
-
-// export const createPost = async (postData) => {
-//   try {
-//     const response = await fetch("/api/posts", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(postData),
-//     });
-
-//     const data = await response.json();
-//     if (!response.ok) throw new Error(data.message || "Failed to create post");
-
-//     return data;
-//   } catch (error) {
-//     console.error("Error creating post:", error.message);
-//     throw error;
-//   }
-// };
-
-
-
 export const getAllPosts = async () => apiCall('GET', '/posts/all');
 export const getFollowingPosts = async () => apiCall('GET', '/posts/following');
 export const getLikedPosts = async (userId) => apiCall('GET', `/posts/likes/${userId}`);
 export const getUserPosts = async (userName) => apiCall('GET', `/posts/user/${userName}`);
-export const likeUnlikePost = async (postId) => apiCall('POST', `/posts/like/${postId}`);
-export const commentOnPost = async (postId, comment) => apiCall('POST', `/posts/comment/${postId}`, { comment });
+export const likeUnlikePost = async (postId) => apiCall('POST', `/posts/like/${postId}`, { userId: 'currentUserId' });
+export const commentOnPost = async (postId, text) => apiCall('POST', `/posts/comment/${postId}`, text);
 export const deletePost = async (postId) => apiCall('DELETE', `/posts/${postId}`);
