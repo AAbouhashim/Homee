@@ -10,6 +10,8 @@ import SupportUs from "./pages/SupportUs.jsx"
 import Notifications from "./pages/Notifications.jsx"
 import NewPost from "./pages/NewPost.jsx"
 import ChangePassword from "./pages/auth/ChangePassword.jsx"
+import NotFoundPage from "./pages/NotFound.jsx"
+import UnderConstructionPage from "./pages/UnderConstruction.jsx"
 
 function App() {
 
@@ -21,12 +23,12 @@ function App() {
         <Route path='/login' element={<LogInPage />} />
         <Route path='/signup' element={<SignUpPage />} />
         <Route path="/my-account" element={<MyAccount />} />
-        <Route path="/support-us" element={<SupportUs />} />
+        <Route path="/support-us" element={<UnderConstructionPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/newPost" element={<NewPost />} />
         <Route path="/changePassword" element={<ChangePassword />} />
-        <Route path="*" element={<h1>Not Found</h1>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   )
