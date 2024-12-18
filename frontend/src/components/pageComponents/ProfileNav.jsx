@@ -79,7 +79,7 @@ const ProfileNav = () => {
   return (
     <div className="navbar-end">
       {isLoggedIn && (
-        <Link to="/newPost" className="btn btn-secondary mr-4">
+        <Link to="/newPost" className="btn btn-primary mr-4">
           New Post
         </Link>
       )}
