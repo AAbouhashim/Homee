@@ -9,6 +9,7 @@ import About from "./pages/About.jsx"
 import SupportUs from "./pages/SupportUs.jsx"
 import Notifications from "./pages/Notifications.jsx"
 import NewPost from "./pages/NewPost.jsx"
+import ChangePassword from "./pages/auth/ChangePassword.jsx"
 
 function App() {
 
@@ -23,7 +24,8 @@ function App() {
         <Route path="/support-us" element={<SupportUs />} />
         <Route path="/about" element={<About />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/newPost" element={<NewPost />} /> 
+        <Route path="/newPost" element={<NewPost />} />
+        <Route path="/changePassword" element={<ChangePassword />} />
         <Route path="*" element={<h1>Not Found</h1>} />
       </Routes>
     </div>

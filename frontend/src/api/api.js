@@ -71,7 +71,7 @@ export const logout = async () => {
 export const getUser = async (userId) => apiCall('GET', `/users/${userId}`);
 export const getSuggestedUsers = async () => apiCall('GET', '/users/suggested');
 export const followUnfollowUser = async (userId) => apiCall('POST', `/users/follow/${userId}`, {setAuthToken});
-export const updateUser = async (userData) => apiCall('POST', '/users/update', userData);
+export const updateUser = async (userData) => apiCall('POST', '/users/update', userData, {setAuthToken});
 
 // Notification API functions
 export const getNotifications = async () => apiCall('GET', '/notifications', {setAuthToken});

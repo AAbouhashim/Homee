@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMe, getUserPosts, deletePost, logout } from "../api/api.js";
+import { getMe, getUserPosts, deletePost, logout, updateUser } from "../api/api.js";
 
 const MyAccount = () => {
   const [user, setUser] = useState(null);
@@ -7,6 +7,7 @@ const MyAccount = () => {
   const [loading, setLoading] = useState(true);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [error, setError] = useState("");
+  const [updatingImage, setUpdatingImage] = useState(false);
 
   // Fetch User Details
   const fetchUserData = async () => {
@@ -37,6 +38,32 @@ const MyAccount = () => {
     } finally {
       setLoadingPosts(false);
     }
+  };
+
+  // Handle Profile Image Update
+  const handleProfileImageUpdate = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size must be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        setUpdatingImage(true);
+        await updateUser({ profileImg: reader.result }); // Update profile image
+        await fetchUserData(); // Refresh user data
+      } catch (err) {
+        console.error("Error updating profile image:", err.message);
+        setError("Failed to update profile image.");
+      } finally {
+        setUpdatingImage(false);
+      }
+    };
+    reader.readAsDataURL(file); // Convert image to Base64
   };
 
   // Handle Post Delete
@@ -83,6 +110,34 @@ const MyAccount = () => {
             <p className="text-center text-error">{error}</p>
           ) : (
             <div className="space-y-4">
+              {/* Profile Image */}
+              <div className="flex flex-col items-center">
+                <div className="avatar w-24 h-24 rounded-full bg-gray-200 mb-4">
+                  {user.profileImg ? (
+                    <img
+                      src={user.profileImg}
+                      alt="Profile"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={`https://api.dicebear.com/6.x/initials/svg?seed=${user.username}`}
+                      alt="Default Avatar"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  )}
+                </div>
+                <label className="btn btn-sm btn-primary">
+                  Update Profile Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleProfileImageUpdate}
+                  />
+                </label>
+              </div>
+
               <div>
                 <p className="text-gray-500 font-medium">Full Name</p>
                 <p className="text-lg font-semibold">{user.fullName}</p>
@@ -104,6 +159,9 @@ const MyAccount = () => {
                 </button>
                 <button className="btn btn-error" onClick={handleLogout}>
                   Logout
+                </button>
+                <button className="btn btn-secondary" onClick={() => window.location.href = "/changePassword"}> 
+                  Change Password 
                 </button>
               </div>
             </div>
