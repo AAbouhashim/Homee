@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Cropper from "react-easy-crop";
 import { getMe, getUserPosts, deletePost, logout, updateUser } from "../api/api.js";
 
 const MyAccount = () => {
@@ -8,6 +9,11 @@ const MyAccount = () => {
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [error, setError] = useState("");
   const [updatingImage, setUpdatingImage] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
 
   // Fetch User Details
   const fetchUserData = async () => {
@@ -26,11 +32,10 @@ const MyAccount = () => {
 
   // Fetch User Posts
   const fetchUserPosts = async () => {
-    if (!user?.username) return; // Ensure user is loaded before fetching posts
+    if (!user?.username) return;
     setLoadingPosts(true);
     try {
       const postsData = await getUserPosts(user.username);
-      console.log("User Posts:", postsData);
       setPosts(postsData);
     } catch (err) {
       console.error("Error fetching user posts:", err.message);
@@ -40,30 +45,66 @@ const MyAccount = () => {
     }
   };
 
-  // Handle Profile Image Update
-  const handleProfileImageUpdate = async (event) => {
+  // Handle Profile Image Selection
+  const handleImageSelect = (event) => {
     const file = event.target.files[0];
-    if (!file) return;
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("File size must be less than 5MB.");
+        return;
+      }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("File size must be less than 5MB.");
-      return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImageSrc(reader.result);
+        setIsCropping(true);
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
+  // Handle Cropped Area
+  const onCropComplete = (_, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  // Save Cropped Image
+  const saveCroppedImage = async () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const image = new Image();
+    image.src = imageSrc;
+
+    image.onload = async () => {
+      canvas.width = croppedAreaPixels.width;
+      canvas.height = croppedAreaPixels.height;
+
+      ctx.drawImage(
+        image,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height
+      );
+
+      const croppedImage = canvas.toDataURL("image/jpeg");
       try {
         setUpdatingImage(true);
-        await updateUser({ profileImg: reader.result }); // Update profile image
-        await fetchUserData(); // Refresh user data
+        await updateUser({ profileImg: croppedImage });
+        await fetchUserData();
+        setIsCropping(false);
+        setImageSrc(null);
       } catch (err) {
-        console.error("Error updating profile image:", err.message);
+        console.error("Error saving cropped image:", err.message);
         setError("Failed to update profile image.");
       } finally {
         setUpdatingImage(false);
       }
     };
-    reader.readAsDataURL(file); // Convert image to Base64
   };
 
   // Handle Post Delete
@@ -86,18 +127,16 @@ const MyAccount = () => {
     }
   };
 
-  // Fetch user data on mount
   useEffect(() => {
     fetchUserData();
   }, []);
 
-  // Fetch posts when user data is available
   useEffect(() => {
     fetchUserPosts();
   }, [user]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-base-200 space-y-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-base-200 space-y-8 pt-8">
       <div className="card w-full max-w-lg bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title text-3xl justify-center mb-4">My Account</h2>
@@ -133,7 +172,7 @@ const MyAccount = () => {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={handleProfileImageUpdate}
+                    onChange={handleImageSelect}
                   />
                 </label>
               </div>
@@ -160,14 +199,46 @@ const MyAccount = () => {
                 <button className="btn btn-error" onClick={handleLogout}>
                   Logout
                 </button>
-                <button className="btn btn-secondary" onClick={() => window.location.href = "/changePassword"}> 
-                  Change Password 
-                </button>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Cropping Modal */}
+      {isCropping && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          style={{ pointerEvents: "auto" }}
+        >
+          <div className="bg-white p-6 rounded-lg w-96 shadow-lg relative">
+            <h2 className="text-xl font-bold mb-4 text-center">Crop Your Image</h2>
+            <div className="relative w-64 h-64 mx-auto">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                className="btn btn-secondary"
+                onClick={() => setIsCropping(false)}
+              >
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={saveCroppedImage}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* User Posts Section */}
       <div className="card w-full max-w-4xl bg-base-100 shadow-xl">
