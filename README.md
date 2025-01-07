@@ -52,4 +52,4 @@ API: RESTful API for data handling
 
 # 🧱 Front-end deployment available here:
 
-homeebyabdullah.netlify.app
+<a href="homeebyabdullah.netlify.app"> Homee </a>
